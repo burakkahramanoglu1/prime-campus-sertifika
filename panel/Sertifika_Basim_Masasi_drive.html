@@ -660,6 +660,10 @@ html[data-tema="koyu"] .pill.mor { background: #2e2350; color: #c4b5fd; }
 .dgAdCizgi { width: 120px; height: 1px; background: linear-gradient(90deg, transparent, var(--ad-altin), transparent); }
 @media (max-width: 560px) { .dgAdLogolar { gap: 12px; } .dgAdLogolar img { height: 54px; } .dgAdLogolar .dgAdPrime { height: 34px; } .adlerMod .dg-durum { font-size: 19px; } }
 
+.ibLinkSat { display: flex; gap: 8px; flex-wrap: wrap; }
+.ibLinkSat input { flex: 1 1 320px; min-width: 0; font-family: var(--f-mono); font-size: 13.5px; }
+#ibLinkOrnek { word-break: break-all; font-size: 12.5px; }
+
 /* ================= KARANLIK MOD =================
  * Açık temada renkler aynen korunur (aşağıdaki değişkenler eski renklerin kendisidir).
  * Koyu tema yalnızca panelde uygulanır; doğrulama ve ibraname sayfaları (öğrencilerin gördüğü) açık kalır. */
@@ -981,6 +985,13 @@ html[data-tema="koyu"] .temaBtn .tk::after { transform: translateX(14px); }
       </div>
     </div>
     <div class="gorunum" data-gorunum="ibra" hidden>
+      <div class="blok" id="ibLinkBlok">
+        <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">İbraname bağlantı adresi</h2><span class="pill" id="ibLinkDurum"></span></div>
+        <p class="muted" style="margin:0;font-size:13px">Öğrenciye SMS / e-postayla giden onay bağlantısının adresi. <b>Sertifika doğrulama (QR) adresinden bağımsızdır</b>: doğrulama bağlantıları Rany'ye gitse bile ibraname bağlantıları burada yazan sayfaya gider. Boş bırakılırsa Google (Apps Script) adresi kullanılır ve her zaman çalışır.</p>
+        <div class="ibLinkSat"><input type="url" id="ibLinkAdres" placeholder="Boş = varsayılan (Google adresi) · ör. https://sertifikaprimecampus.online/ibraname" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="ibLinkKaydet">Kaydet</button><button type="button" id="ibLinkVarsayilan">Varsayılana dön</button><button type="button" id="ibLinkTest">Test et</button></div>
+        <small class="muted">Giden bağlantı örneği: <code id="ibLinkOrnek" class="mono"></code></small>
+        <div id="ibLinkNot" class="note warn" hidden></div>
+      </div>
       <div class="blok" id="ibMetinBlok">
         <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">1. İbraname metni</h2><span class="pill mut" id="ibSurum">Henüz metin yok</span></div>
         <p class="muted" style="margin:0;font-size:13px">Metni yapıştırın. Kişiye özel alanlar için tıklayın; öğrenciye giderken otomatik dolar: <span class="ibChips"><button type="button" class="ibChip" data-ek="{AD}">{AD}</button><button type="button" class="ibChip" data-ek="{PROGRAM}">{PROGRAM}</button><button type="button" class="ibChip" data-ek="{MARKA}">{MARKA}</button><button type="button" class="ibChip" data-ek="{BUGUN}">{BUGUN}</button><button type="button" class="ibChip" data-ek="{KIMLIK}">{KIMLIK}</button><button type="button" class="ibChip" data-ek="{DOGUM}">{DOGUM}</button><button type="button" class="ibChip" data-ek="{ADRES}">{ADRES}</button></span></p>
@@ -1022,7 +1033,7 @@ html[data-tema="koyu"] .temaBtn .tk::after { transform: translateX(14px); }
         <div class="row" style="align-items:center"><select id="ibKanal" style="max-width:260px"><option value="sms">SMS ile gönder</option><option value="eposta">E-posta ile gönder</option><option value="ikisi">SMS + e-posta</option><option value="yok">Yalnızca bağlantı oluştur</option></select><button type="button" class="primary" id="ibGonder" disabled>Gönder</button><small class="muted" id="ibGonderNot"></small></div>
       </div>
       <div class="blok" id="ibTakipBlok">
-        <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">3. Onay durumu</h2><button type="button" class="small" id="ibYenile" title="Yenile">↻</button></div>
+        <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">3. Onay durumu</h2><span class="row" style="gap:8px"><button type="button" class="small" id="ibTopluTekrar" hidden>Açılmamışlara yeniden gönder</button><button type="button" class="small" id="ibYenile" title="Yenile">↻</button></span></div>
         <div class="ibSay" id="ibSay"></div>
         <div class="row"><span class="act" id="ibSekme"><button type="button" class="small primary" data-ibs="">Tümü</button><button type="button" class="small" data-ibs="GÖNDERİLDİ">Açılmadı</button><button type="button" class="small" data-ibs="GÖRÜLDÜ">Görüldü, onay yok</button><button type="button" class="small" data-ibs="ONAYLANDI">Onaylanan</button></span></div>
         <div class="ibAraSat"><label class="ibAra"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input type="search" id="ibAra" placeholder="Ad, telefon, e-posta ya da program ara…" autocomplete="off"></label><small class="muted" id="ibAraSay"></small></div>
@@ -3575,8 +3586,29 @@ async function ibraYukle() {
   if (a && !S.ibDuzenlendi) { $("#ibBaslik").value = a.baslik; $("#ibMetin").value = a.metin; }
   $("#ibSurum").textContent = a ? `Sürüm ${a.surum} · ${new Date(a.z).toLocaleString("tr-TR")}` : "Henüz metin yok";
   $("#ibSurum").className = "pill " + (a ? "ok" : "mut");
-  ibSmsDurumCiz();
+  ibSmsDurumCiz(); ibLinkCiz();
   ibOnizCiz(); ibKisiCiz(); ibTakipCiz();
+}
+/* ---- İbraname bağlantı adresi (doğrulama/QR adresinden bağımsız) ---- */
+function ibLinkCiz() {
+  const l = (S.ib && S.ib.linkAyar) || {}, oz = !!l.adres;
+  if (document.activeElement !== $("#ibLinkAdres")) $("#ibLinkAdres").value = l.adres || "";
+  $("#ibLinkOrnek").textContent = l.ornek ? l.ornek.replace("ORNEK", "…") : "";
+  $("#ibLinkDurum").className = "pill " + (oz ? "bil" : "ok"); $("#ibLinkDurum").textContent = oz ? "Özel adres" : "Varsayılan (Google)";
+  $("#ibLinkVarsayilan").disabled = !oz;
+  const n = (S.ib && S.ib.liste || []).filter((x) => x.d === "GÖNDERİLDİ" && (x.tel || x.e)).length;
+  $("#ibTopluTekrar").hidden = !n; $("#ibTopluTekrar").textContent = `Açılmamışlara yeniden gönder (${sayi(n)})`;
+}
+async function ibLinkKaydet(adres) {
+  const nt = $("#ibLinkNot"); nt.hidden = true;
+  try {
+    const r = await gsr("ibraLinkKaydet", adres);
+    S.ib.linkAyar = { ...(S.ib.linkAyar || {}), adres: r.adres, ornek: r.ornek }; ibLinkCiz();
+    toast(r.adres ? "İbraname bağlantı adresi kaydedildi." : "Varsayılan (Google) adres kullanılacak.");
+    const n = (S.ib.liste || []).filter((x) => x.d === "GÖNDERİLDİ").length;
+    if (n) { nt.className = "note info"; nt.innerHTML = `Daha önce gönderilip <b>henüz açılmamış ${sayi(n)} bağlantı</b> eski adresle gitmişti. Doğru adresle tekrar göndermek için <b>Açılmamışlara yeniden gönder</b> düğmesini kullanabilirsiniz.`; nt.hidden = false; }
+    await ibraYukle();
+  } catch (e) { nt.className = "note bad"; nt.textContent = e.message || String(e); nt.hidden = false; }
 }
 /* Seçili markanın SMS hesabı: Prime Campus → ana hesap (sertifika SMS'leriyle aynı başlık), Tiger Master → ibraname hesabı */
 function ibSmsDurumCiz() {
@@ -4040,6 +4072,23 @@ function ibraBagla() {
   $("#ibDuzenDlg").addEventListener("cancel", () => { S.ibDuzen = null; });
   $("#ibdKnSil").onchange = () => { $("#ibdKn").disabled = $("#ibdKnSil").checked; };
   $("#ibAra").oninput = () => ibTakipCiz();
+  $("#ibLinkKaydet").onclick = () => ibLinkKaydet($("#ibLinkAdres").value.trim());
+  $("#ibLinkVarsayilan").onclick = () => { $("#ibLinkAdres").value = ""; ibLinkKaydet(""); };
+  $("#ibLinkTest").onclick = () => {
+    const a = $("#ibLinkAdres").value.trim() || ((S.ib && S.ib.linkAyar) || {}).varsayilan || "";
+    if (!a) return; const u = a.includes("{ANAHTAR}") ? a.replace(/\{ANAHTAR\}/g, "test") : a + (a.includes("?") ? "&" : "?") + "ibra=test";
+    window.open(u, "_blank", "noopener"); toast("Açılan sayfada \"bağlantı geçersiz\" uyarısı görünüyorsa adres doğru çalışıyor demektir (test anahtarı gerçek değil).");
+  };
+  $("#ibTopluTekrar").onclick = async () => {
+    const l = (S.ib.liste || []).filter((x) => x.d === "GÖNDERİLDİ" && (x.tel || x.e));
+    if (!l.length || !confirm(`${l.length} kişiye onay bağlantısı güncel adresle yeniden gönderilsin mi?\n(SMS ve/veya e-posta; SMS kredisi kullanılır.)`)) return;
+    const b = $("#ibTopluTekrar"); b.disabled = true; let ok = 0, hata = 0;
+    for (const [i, x] of l.entries()) {
+      b.textContent = `Gönderiliyor… ${i + 1}/${l.length}`;
+      try { await gsr("ibraTekrarGonder", x.a, "ikisi"); ok++; } catch { hata++; }
+    }
+    b.disabled = false; toast(`${sayi(ok)} kişiye yeniden gönderildi${hata ? `, ${sayi(hata)} gönderilemedi` : ""}.`); await ibraYukle();
+  };
   $("#ibListeTemizle").onclick = () => { if (S.ibKisiler.length && confirm("Liste temizlensin mi?")) { S.ibKisiler = []; ibKisiCiz(); ibOnizCiz(); } };
   $("#ibGonder").onclick = async () => {
     const l = S.ibKisiler.filter((x) => !x.hata), kanal = $("#ibKanal").value, mAd = (IB_MARKA[S.ibMarka || "prime"]).ad; if (!l.length) return;
@@ -4953,6 +5002,7 @@ async function kullan(ad) {
 }
 async function baslat() {
   telifUygula(TELIF_VARSAYILAN);
+  if (DRIVE && !window.IBRA_ANAHTAR) { try { const q = new URLSearchParams(location.search).get("ibra"); if (q) window.IBRA_ANAHTAR = q.replace(/[^0-9a-z]/gi, "").slice(0, 40); } catch {} } // WordPress sayfasından açılan ibraname bağlantısı
   if (DRIVE && window.IBRA_ANAHTAR) { await ibraSayfasiAc(String(window.IBRA_ANAHTAR)); return; }
   if (DRIVE) { if (window.SAYFA_BILGI) { if (window.SAYFA_BILGI.telif) telifUygula(window.SAYFA_BILGI.telif); } else gsrHam("sayfaBilgisi").then((b) => b && b.telif && telifUygula(b.telif)).catch(() => {}); }
   if (DRIVE && window.DOGRULA_FORM) { await dogrulamaSayfasi("", true); return; }
