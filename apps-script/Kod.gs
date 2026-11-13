@@ -1332,8 +1332,10 @@ function ibraDoldur_(s, r, kimlikDe) {
 }
 /* İbraname bağlantı adresi — sertifika doğrulama (QR) adresinden BAĞIMSIZDIR.
  * (QR/doğrulama bağlantıları Rany'ye yönlendirilse bile ibraname bağlantıları kendi sayfasına gider.)
- * Ayar: İbraname > Bağlantı adresi (ayarlar/ibraLink). Boşsa Apps Script adresi kullanılır (her zaman çalışır).
+ * Ayar: İbraname > Bağlantı adresi (ayarlar/ibraLink). Boşsa IB_VARSAYILAN_LINK (WordPress panel sayfası) kullanılır.
+ * Panel sayfası ?ibra=… parametresini görünce giriş ekranı yerine ibranameyi açar.
  * Adreste {ANAHTAR} varsa yerine konur; yoksa ?ibra=… eklenir. */
+var IB_VARSAYILAN_LINK = 'https://sertifikaprimecampus.online/panel';
 var IB_LINK_;
 function ibraLinkAyar_() {
   if (IB_LINK_ !== undefined) return IB_LINK_; // listede her satır için tabloyu yeniden okumamak için
@@ -1343,7 +1345,7 @@ function ibraLinkAyar_() {
 }
 function ibraAdres_(anahtar) {
   var t = ibraLinkAyar_();
-  if (!t) return ScriptApp.getService().getUrl() + '?ibra=' + anahtar;
+  if (!t) t = IB_VARSAYILAN_LINK || ScriptApp.getService().getUrl();
   if (t.indexOf('{ANAHTAR}') >= 0) return t.replace(/\{ANAHTAR\}/g, anahtar);
   return t + (t.indexOf('?') < 0 ? '?' : '&') + 'ibra=' + anahtar;
 }
@@ -1381,7 +1383,7 @@ function ibraMetinKaydet(token, json) {
 function ibraListe(token) {
   alan_(token, 'ibra');
   var a = ibraAyar_(), rows = ibraSatirlari_(ibraSayfasi_());
-  return { linkAyar: { adres: ibraLinkAyar_(), varsayilan: ScriptApp.getService().getUrl(), ornek: ibraAdres_('ORNEK') }, ayar: a ? { baslik: a.baslik, metin: a.metin, surum: a.surum, z: a.z } : null, sms: netgsmBagli_('IBRA_') || netgsmBagli_(''), smsBaslik: ibSmsBaslik_('tiger'), smsMarka: { prime: { bagli: netgsmBagli_(ibSmsOnek_('prime')), baslik: ibSmsBaslik_('prime') }, tiger: { bagli: netgsmBagli_(ibSmsOnek_('tiger')), baslik: ibSmsBaslik_('tiger') } }, markalar: IB_MARKALAR,
+  return { linkAyar: { adres: ibraLinkAyar_(), varsayilan: IB_VARSAYILAN_LINK || ScriptApp.getService().getUrl(), google: ScriptApp.getService().getUrl(), ornek: ibraAdres_('ORNEK') }, ayar: a ? { baslik: a.baslik, metin: a.metin, surum: a.surum, z: a.z } : null, sms: netgsmBagli_('IBRA_') || netgsmBagli_(''), smsBaslik: ibSmsBaslik_('tiger'), smsMarka: { prime: { bagli: netgsmBagli_(ibSmsOnek_('prime')), baslik: ibSmsBaslik_('prime') }, tiger: { bagli: netgsmBagli_(ibSmsOnek_('tiger')), baslik: ibSmsBaslik_('tiger') } }, markalar: IB_MARKALAR,
     liste: rows.map(function (r) { return { a: r[IB.A], isim: r[IB.AD], tel: ibTelGoster_(r[IB.TEL]), e: r[IB.EP], program: r[IB.PRG], marka: ibMarka_(r[IB.MRK]), surum: r[IB.SUR], d: r[IB.DUR], gn: r[IB.GON], oz: r[IB.ONAY], kanal: r[IB.KANAL], ozet: r[IB.OZET], ip: r[IB.IP], ua: r[IB.UA], not: r[IB.NOT], g1: r[IB.G1], gs: r[IB.GS], gsay: Number(r[IB.GN] || 0), gip: r[IB.GIP], kt: r[IB.KT], kn: ibKimlikGizle_(r[IB.KN]), dt: r[IB.DT], adr: r[IB.ADR], tkr: r[IB.TKR], gnc: r[IB.GNC], knVar: !!r[IB.KN], link: ibraAdres_(r[IB.A]) }; }) };
 }
 /* Yönetici: kişilere onay bağlantısı gönder.

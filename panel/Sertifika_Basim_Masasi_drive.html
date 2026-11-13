@@ -987,8 +987,8 @@ html[data-tema="koyu"] .temaBtn .tk::after { transform: translateX(14px); }
     <div class="gorunum" data-gorunum="ibra" hidden>
       <div class="blok" id="ibLinkBlok">
         <div class="row" style="justify-content:space-between;align-items:center"><h2 style="margin:0">İbraname bağlantı adresi</h2><span class="pill" id="ibLinkDurum"></span></div>
-        <p class="muted" style="margin:0;font-size:13px">Öğrenciye SMS / e-postayla giden onay bağlantısının adresi. <b>Sertifika doğrulama (QR) adresinden bağımsızdır</b>: doğrulama bağlantıları Rany'ye gitse bile ibraname bağlantıları burada yazan sayfaya gider. Boş bırakılırsa Google (Apps Script) adresi kullanılır ve her zaman çalışır.</p>
-        <div class="ibLinkSat"><input type="url" id="ibLinkAdres" placeholder="Boş = varsayılan (Google adresi) · ör. https://sertifikaprimecampus.online/ibraname" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="ibLinkKaydet">Kaydet</button><button type="button" id="ibLinkVarsayilan">Varsayılana dön</button><button type="button" id="ibLinkTest">Test et</button></div>
+        <p class="muted" style="margin:0;font-size:13px">Öğrenciye SMS / e-postayla giden onay bağlantısının adresi. <b>Sertifika doğrulama (QR) adresinden bağımsızdır</b>: doğrulama bağlantıları Rany'ye gitse bile ibraname bağlantıları burada yazan sayfaya gider. Boş bırakılırsa <b>sertifikaprimecampus.online/panel</b> kullanılır; panel sayfası bağlantıdaki ibraname kodunu görünce giriş ekranı yerine öğrencinin ibranamesini açar. Sorun olursa Google (Apps Script) adresini yazabilirsiniz; o her zaman çalışır.</p>
+        <div class="ibLinkSat"><input type="url" id="ibLinkAdres" placeholder="Boş = varsayılan: https://sertifikaprimecampus.online/panel" autocomplete="off" spellcheck="false"><button type="button" class="primary" id="ibLinkKaydet">Kaydet</button><button type="button" id="ibLinkVarsayilan">Varsayılana dön</button><button type="button" id="ibLinkTest">Test et</button></div>
         <small class="muted">Giden bağlantı örneği: <code id="ibLinkOrnek" class="mono"></code></small>
         <div id="ibLinkNot" class="note warn" hidden></div>
       </div>
@@ -3594,7 +3594,7 @@ function ibLinkCiz() {
   const l = (S.ib && S.ib.linkAyar) || {}, oz = !!l.adres;
   if (document.activeElement !== $("#ibLinkAdres")) $("#ibLinkAdres").value = l.adres || "";
   $("#ibLinkOrnek").textContent = l.ornek ? l.ornek.replace("ORNEK", "…") : "";
-  $("#ibLinkDurum").className = "pill " + (oz ? "bil" : "ok"); $("#ibLinkDurum").textContent = oz ? "Özel adres" : "Varsayılan (Google)";
+  $("#ibLinkDurum").className = "pill " + (oz ? "bil" : "ok"); $("#ibLinkDurum").textContent = oz ? "Özel adres" : "Varsayılan (panel)";
   $("#ibLinkVarsayilan").disabled = !oz;
   const n = (S.ib && S.ib.liste || []).filter((x) => x.d === "GÖNDERİLDİ" && (x.tel || x.e)).length;
   $("#ibTopluTekrar").hidden = !n; $("#ibTopluTekrar").textContent = `Açılmamışlara yeniden gönder (${sayi(n)})`;
@@ -3604,7 +3604,7 @@ async function ibLinkKaydet(adres) {
   try {
     const r = await gsr("ibraLinkKaydet", adres);
     S.ib.linkAyar = { ...(S.ib.linkAyar || {}), adres: r.adres, ornek: r.ornek }; ibLinkCiz();
-    toast(r.adres ? "İbraname bağlantı adresi kaydedildi." : "Varsayılan (Google) adres kullanılacak.");
+    toast(r.adres ? "İbraname bağlantı adresi kaydedildi." : "Varsayılan adres (sertifikaprimecampus.online/panel) kullanılacak.");
     const n = (S.ib.liste || []).filter((x) => x.d === "GÖNDERİLDİ").length;
     if (n) { nt.className = "note info"; nt.innerHTML = `Daha önce gönderilip <b>henüz açılmamış ${sayi(n)} bağlantı</b> eski adresle gitmişti. Doğru adresle tekrar göndermek için <b>Açılmamışlara yeniden gönder</b> düğmesini kullanabilirsiniz.`; nt.hidden = false; }
     await ibraYukle();
