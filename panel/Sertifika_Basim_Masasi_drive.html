@@ -664,6 +664,11 @@ html[data-tema="koyu"] .pill.mor { background: #2e2350; color: #c4b5fd; }
 .ibLinkSat input { flex: 1 1 320px; min-width: 0; font-family: var(--f-mono); font-size: 13.5px; }
 #ibLinkOrnek { word-break: break-all; font-size: 12.5px; }
 
+/* Sertifika basımı pasif */
+.gorunum.basPasif > :not(.pasifNot) { opacity: .42; pointer-events: none; filter: grayscale(.5); user-select: none; }
+.pasifNot { font-size: 14px; }
+.pasifEt { margin-left: auto; font-style: normal; font-size: 10.5px; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; padding: 2px 7px; border-radius: 99px; background: var(--warn-bg); color: var(--warn); }
+
 /* ================= KARANLIK MOD =================
  * Açık temada renkler aynen korunur (aşağıdaki değişkenler eski renklerin kendisidir).
  * Koyu tema yalnızca panelde uygulanır; doğrulama ve ibraname sayfaları (öğrencilerin gördüğü) açık kalır. */
@@ -830,6 +835,7 @@ html[data-tema="koyu"] .temaBtn .tk::after { transform: translateX(14px); }
     <div id="modNot" class="note info" hidden style="margin:12px 16px 0"></div>
 
     <div class="gorunum" data-gorunum="bas">
+      <div class="note warn pasifNot" data-pasif hidden><b>Sertifika basımı geçici olarak kapalı.</b> Sertifika tasarımı Lion Academy A.Ş. olarak yenileniyor; yeni tasarım gelene kadar bu bölümden sertifika basılamaz. Kayıtlar, doğrulama sayfası ve ibraname çalışmaya devam ediyor.</div>
       <section class="step" id="adim1">
         <div id="panelDosya">
           <label class="drop" id="drop" tabindex="0">
@@ -1061,6 +1067,7 @@ html[data-tema="koyu"] .temaBtn .tk::after { transform: translateX(14px); }
       </div>
     </div>
     <div class="gorunum" data-gorunum="adler" hidden>
+      <div class="note warn pasifNot" data-pasif hidden><b>Sertifika basımı geçici olarak kapalı.</b> Sertifika tasarımı Lion Academy A.Ş. olarak yenileniyor; yeni tasarım gelene kadar bu bölümden sertifika basılamaz. Kayıtlar, doğrulama sayfası ve ibraname çalışmaya devam ediyor.</div>
       <div class="blok" id="adlerUstBlok">
         <div class="adlerSay" id="adlerSay"></div>
       </div>
@@ -1345,6 +1352,17 @@ const SABLON_VARSAYILAN = "data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2w
 /* Adler: CPD dışı, ayrı şablon ve ayrı sayfa ("Adler sertifika"). Sınav raporunda adı "adler" geçen eğitim buraya aktarılır. */
 const ADLER = { ad: "ADLERIAN APPROACH IN PSYCHOTHERAPY TRAINING", no: "ADLER", saat: 150, adler: true, cpdYok: true };
 const adlerMi = (eg) => eg === ADLER.ad;
+/* SERTİFİKA BASIMI PASİF: yeni (Lion Academy A.Ş.) tasarımı gelene kadar basım kapalı.
+ * Açmak için false yapın (sunucudaki BASIM_PASIF ile birlikte). Kayıtlar, doğrulama ve ibraname etkilenmez. */
+const BASIM_PASIF = true;
+function basimKapali() { if (!BASIM_PASIF) return false; toast("Sertifika basımı geçici olarak kapalı (tasarım yenileniyor)."); return true; }
+function pasifUygula() {
+  if (!BASIM_PASIF) return;
+  document.querySelectorAll("[data-pasif]").forEach((x) => (x.hidden = false));
+  document.querySelectorAll('[data-gorunum="bas"], [data-gorunum="adler"]').forEach((v) => v.classList.add("basPasif"));
+  ["#uretBtn", "#elleEkleBtn", "#ynBasla", "#adlerBas", "#adeEkle"].forEach((q) => { const b = $(q); if (b) { b.disabled = true; b.title = "Sertifika basımı geçici olarak kapalı"; } });
+  ['[data-git="bas"]', "#navAdler"].forEach((q) => { const n = document.querySelector(q); if (n && !n.querySelector(".pasifEt")) n.insertAdjacentHTML("beforeend", '<i class="pasifEt">kapalı</i>'); });
+}
 // Akredite eğitimler (CPD Standards Office). Yeni eğitim yalnızca akreditasyon alındığında buraya eklenir.
 const AKREDITE = [
   { no: "01", ad: "LIFE COACHING TRAINING", saat: 275 },
@@ -1696,7 +1714,7 @@ function uretDurum() {
   const kayitsiz = !S.kayitYuklu;
   $("#yerelUyari").hidden = !kayitsiz;
   const engel = n === 0 || (kayitsiz && !$("#kayitsizDevam").checked) || !S.yazabilir || !S.bgJpeg || (!$("#optKisi").checked && !$("#optToplu").checked);
-  $("#uretBtn").disabled = engel;
+  $("#uretBtn").disabled = engel || BASIM_PASIF;
   $("#uretBilgi").textContent = !S.yazabilir ? "Bu sayfada kayıt yazma izniniz yok; sertifika oluşturamazsınız."
     : n === 0 ? "Basılacak yeni sertifika yok." : `${sayi(n)} sertifika oluşturulacak.`;
 }
@@ -1959,7 +1977,7 @@ async function kayitOkuDb() {
 /* ---------- üretim ---------- */
 function ilerleme(oran, yazi) { $("#barIc").style.width = Math.round(oran * 100) + "%"; $("#ilerlemeYazi").textContent = yazi; }
 window.addEventListener("beforeunload", (ev) => { if (S.uzunIs) { ev.preventDefault(); ev.returnValue = "Sertifikalar hazırlanıyor. Sayfayı kapatırsanız işlem yarıda kalır."; return ev.returnValue; } });
-async function uret() { await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
+async function uret() { if (basimKapali()) return; await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
   const btn = $("#uretBtn"); btn.disabled = true; S.uzunIs = true;
   $("#sonuc").hidden = true; $("#indirSatir").hidden = true; $("#ilerleme").hidden = false; ilerleme(0, "Hazırlanıyor…");
   try {
@@ -2654,7 +2672,7 @@ function onayCiz() {
   onayRozet();
 }
 const onaySecili = () => [...document.querySelectorAll(".onaySec:checked")].map((c) => S.onayListe[+c.dataset.i]).filter(Boolean);
-async function onaylaListe(liste) { await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
+async function onaylaListe(liste) { if (basimKapali()) return; await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
   if (!liste.length) { toast("Önce sertifika seçin."); return; }
   const kim = S.kullanici ? S.kullanici.kadi : "", z = new Date().toISOString();
   const bar = (o, y) => { $("#onayIlerleme").hidden = false; $("#onayBar").style.width = Math.round(o * 100) + "%"; $("#onayYazi").textContent = y; };
@@ -2719,7 +2737,7 @@ function ynCiz() {
   if ([...g.keys()].includes(sec)) $("#ynEgitim").value = sec;
   $("#ynDriveEt").hidden = !S.driveMod;
 }
-async function ynUret() { await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
+async function ynUret() { if (basimKapali()) return; await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]); await kutYukle("xlsx", "jszip").catch(() => {});
   const kisi = $("#ynKisi").checked, toplu = $("#ynToplu").checked, drv = S.driveMod && $("#ynDrive").checked;
   if (!kisi && !toplu && !drv) { toast("En az bir çıktı seçin."); return; }
   if (!S.bgJpeg) { toast("Şablon yüklenmedi."); return; }
@@ -3120,7 +3138,7 @@ function elleKayitliCiz() {
   $("#elleTbl").innerHTML = k.map((r, i) => `<tr><td>${esc(r.isim)}${r.e ? `<small>${esc(r.e)}</small>` : ""}</td><td><small>${esc(r.egitim)}</small></td><td class="mono">${esc(r.t)}</td><td class="mono">${esc(r.n)}</td><td><button class="small" type="button" data-epdf="${i}" style="white-space:nowrap">PDF indir</button></td></tr>`).join("");
   $("#elleTbl").querySelectorAll("button[data-epdf]").forEach((b) => b.onclick = () => tekPdfIndir(S.elleKaydedilen[+b.dataset.epdf]));
 }
-async function elleEkle() { await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]);
+async function elleEkle() { if (basimKapali()) return; await Promise.all([ozelHazir().catch(() => {}), adlerHazir().catch(() => {})]);
   const uy = $("#elleUyari"); uy.hidden = true;
   const btn = $("#elleEkleBtn");
   const adHam = $("#elleAd").value.trim(), isim = isimNorm(adHam), egAd = $("#elleEgitim").value, tv = $("#elleTarih").value, eposta = $("#elleEposta").value.trim(), telHam = $("#elleTel").value.trim(), tel = telNorm(telHam);
@@ -3251,7 +3269,7 @@ function temaKur() {
   };
 }
 function olaylar() {
-  temaKur();
+  temaKur(); pasifUygula();
   const drop = $("#drop"), inp = $("#dosyaInput");
   inp.onchange = () => inp.files[0] && dosyaYukle(inp.files[0]);
   drop.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); inp.click(); } });
@@ -3823,7 +3841,7 @@ function adlerCiz() {
       <td class="ibSagH"><span class="ibIslem">${ibBtn("sil", "Listeden çıkar", `data-adsil="${i}"`, " tehlike")}</span></td></tr>`;
   }).join("") || `<tr><td colspan="6" class="ibBosSatir">Liste boş. Sınav raporunu yükleyin ya da elle ekleyin.</td></tr>`;
   $("#adlerHepsi").checked = !!l.length && l.every((x) => x.sec || adlerDurum(x).tur === "var");
-  $("#adlerBas").disabled = !sec.length || !S.yazabilir;
+  $("#adlerBas").disabled = !sec.length || !S.yazabilir || BASIM_PASIF;
   $("#adlerBas").textContent = sec.length ? `${sayi(sec.length)} kişiye Adler sertifikası bas` : "Adler sertifikası bas";
   $("#adlerBasNot").textContent = sec.some((x) => adlerDurum(x).tur === "benzer") ? "Benzer isim uyarısı olanları kontrol edin." : "";
   adlerOnizle(); adlerBasilanCiz(basilan); adlerRozet();
@@ -3875,7 +3893,7 @@ async function adlerDosya(f) {
   else toast(`${sayi(a.toplam)} Adler öğrencisi bulundu · ${sayi(a.yeni)} yeni kişi listeye eklendi.`);
   gorunum("adler");
 }
-async function adlerUret() {
+async function adlerUret() { if (basimKapali()) return;
   const sec = adlerSecili(); if (!sec.length) return;
   const benz = sec.filter((x) => adlerDurum(x).tur === "benzer");
   if (benz.length && !confirm(`${benz.length} kişinin adı daha önce Adler sertifikası almış birine benziyor:\n\n${benz.map((x) => `${x.isim} ≈ ${adlerDurum(x).benzer.join(", ")}`).join("\n")}\n\nYine de basılsın mı?`)) return;

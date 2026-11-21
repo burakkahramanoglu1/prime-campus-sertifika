@@ -886,8 +886,11 @@ function topluSet(token, kol, haritaJson) {
  * (Eskiden her eğitim/harf grubu için ayrı okuma + yazma + Kayıt sayfası yenileme yapılıyordu.)
  * istek: { parcaId: { egitim, kisiler: { isim: govde } } }
  * dönüş: { parcaId: { eklenen: [isim], cakisan: { isim: mevcutKayit }, o: { isim: onayDurumu } } } */
+/* SERTİFİKA BASIMI PASİF: yeni tasarım gelene kadar yeni sertifika kaydı alınmaz. Açmak için false yapın (paneldeki BASIM_PASIF ile birlikte). */
+var BASIM_PASIF = true;
 function kayitEkleToplu(token, json) {
   var o = alan_(token, 'sertifika');
+  if (BASIM_PASIF) throw new Error('Sertifika basımı geçici olarak kapalı (tasarım yenileniyor).');
   var istek = JSON.parse(json), sonuc = {}, rows = null;
   kilitle_(function () {
     var sh = veri_(); rows = satirlar_();
