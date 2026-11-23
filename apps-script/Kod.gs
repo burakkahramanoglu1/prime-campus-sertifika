@@ -1335,10 +1335,11 @@ function ibraDoldur_(s, r, kimlikDe) {
 }
 /* İbraname bağlantı adresi — sertifika doğrulama (QR) adresinden BAĞIMSIZDIR.
  * (QR/doğrulama bağlantıları Rany'ye yönlendirilse bile ibraname bağlantıları kendi sayfasına gider.)
- * Ayar: İbraname > Bağlantı adresi (ayarlar/ibraLink). Boşsa IB_VARSAYILAN_LINK (WordPress panel sayfası) kullanılır.
- * Panel sayfası ?ibra=… parametresini görünce giriş ekranı yerine ibranameyi açar.
+ * Rany yönlendirmesi YALNIZCA sertifika doğrulama (?dogrula=) bağlantıları içindir; ibraname bağlantıları
+ * varsayılan olarak doğrudan Google (Apps Script) adresine gider ve hiçbir yönlendirmeden geçmez.
+ * Ayar: İbraname > Bağlantı adresi (ayarlar/ibraLink) — boşsa Google adresi kullanılır.
  * Adreste {ANAHTAR} varsa yerine konur; yoksa ?ibra=… eklenir. */
-var IB_VARSAYILAN_LINK = 'https://sertifikaprimecampus.online/panel';
+var IB_VARSAYILAN_LINK = ''; // boş = Google (Apps Script) adresi
 var IB_LINK_;
 function ibraLinkAyar_() {
   if (IB_LINK_ !== undefined) return IB_LINK_; // listede her satır için tabloyu yeniden okumamak için
